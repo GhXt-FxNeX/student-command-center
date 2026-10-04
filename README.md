@@ -124,7 +124,7 @@ The entries are named `gemini`, `openrouter` and `spotify_tokens`. You can delet
 
 ### Spotify
 
-If you have a Spotify premium subscription, you can go to https://developer.spotify.com/ , and generate a Web API key.
+If you have a Spotify premium subscription, you can go to https://developer.spotify.com/  and generate a Web API key.
 
 In the app, you can control the playback so the app doesn't produce the sound, it only controls the playback on the active device with open Spotify.
 
