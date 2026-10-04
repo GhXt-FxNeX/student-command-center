@@ -210,6 +210,7 @@ After installing, press **Use this companion** to switch to it. Your companion's
 | Edges look blurry | Turn on **Pixel art**. |
 | A stage is rejected | Every stage folder needs an `idle.png`. |
 
+
 >I didn't have enough time to make the assets so it will appear as one image that never change.
 
 ### Customization
