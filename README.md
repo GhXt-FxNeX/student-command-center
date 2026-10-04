@@ -99,7 +99,7 @@ You can apply usage limits from the app to avoid spending/over-spending
 
 > AI functionality may require configuration of a supported provider and may depend on the provider's availability and usage limits.
 > (for ai to work You need to provide api keys to generate the gemini keys: https://aistudio.google.com/api-keys?project=gen-lang-client-0704022194, for open router keys: https://openrouter.ai/)
-> ## Where your API keys are stored
+## Where your API keys are stored
 
 Your Gemini and OpenRouter API keys, and your Spotify sign-in, are saved in your computer's built-in secure storage. They are **not** stored in the app's database, in a settings file, or in a backup, and the app's interface never receives them back after you save them. Only the app's background process reads them, when it contacts the provider.
 
