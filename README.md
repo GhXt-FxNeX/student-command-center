@@ -36,7 +36,7 @@ The planner supports:
 
 The goal is to make the planner useful for real university schedules rather than simply generating a list of tasks.
 
-### ⏱️ Pomodoro & Study Tracking
+### Pomodoro & Study Tracking
 
 SCC includes a built-in Pomodoro timer for focused study sessions.
 
