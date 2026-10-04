@@ -61,7 +61,9 @@ Which helps optimizing and keeping things into order as you can plan the previou
 
 ### Courses
 
-You could add your courses and subjects with their course codes for example I'm in med school my neuro course has the code 205 I can add that course and then I can add subjects under it.
+You could add your courses and subjects with their course codes if you have codes, for example I'm in med school my neuro course has the code 205 I can add that course and then I can add subjects under it.
+
+You can use it in other ways for example add you academic year instead of a course name under it you can add subjects
 
 Adding subjects to a certain course makes you add to it your weekly schedule for example I have Anatomy classes on Saturday, Sunday and Thursday I can open these specific days and add the time of the class.
 
@@ -98,7 +100,12 @@ AI usage is designed around the application rather than requiring the entire app
 You can apply usage limits from the app to avoid spending/over-spending
 
 > AI functionality may require configuration of a supported provider and may depend on the provider's availability and usage limits.
-> (for ai to work You need to provide api keys to generate the gemini keys: https://aistudio.google.com/api-keys?project=gen-lang-client-0704022194, for open router keys: https://openrouter.ai/)
+> (for ai to work You need to provide api keys to generate)
+
+The gemini key link: https://aistudio.google.com/api-keys?project=gen-lang-client-0704022194
+
+The open router key link: https://openrouter.ai/
+
 ## Where your API keys are stored
 
 Your Gemini and OpenRouter API keys, and your Spotify sign-in, are saved in your computer's built-in secure storage. They are **not** stored in the app's database, in a settings file, or in a backup, and the app's interface never receives them back after you save them. Only the app's background process reads them, when it contacts the provider.
