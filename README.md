@@ -86,7 +86,7 @@ You can organize spending into categories such as:
 - Books
 - Savings
 - You also can add you own categories!!
-- 
+
 The application can also show spending versus saved amounts.
 
 ### AI Features
