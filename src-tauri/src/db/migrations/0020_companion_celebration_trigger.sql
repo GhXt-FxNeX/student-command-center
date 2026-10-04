@@ -1,0 +1,16 @@
+-- Phase 14 Item 5 prep: distinguishes *which* recent event is driving the
+-- "celebrating" mood (mood.rs's CELEBRATING_WINDOW_SECS window covers both
+-- LevelUp and EvolutionUnlocked) so the frontend can show a one-shot
+-- "evolution" or "level-up" clip instead of only the generic "celebration"
+-- fallback. Computed and persisted alongside `mood` itself in
+-- engine::process_event, for the same reason `mood` is persisted rather
+-- than re-derived on every read: a plain get_state() call must return
+-- exactly what was true at the last event, not a live re-derivation that
+-- could drift if more (non-celebration) events were logged since.
+--
+-- NO CHECK constraint here — see migration 0009's note: `ALTER TABLE ...
+-- ADD COLUMN ... CHECK (...)` is unreliable on this project's SQLite
+-- version. Valid values ('level_up' | 'evolution' | NULL) are enforced in
+-- Rust (mood.rs) instead, consistent with how every other ADD COLUMN since
+-- 0009 handles this.
+ALTER TABLE companion ADD COLUMN celebration_trigger TEXT NULL;

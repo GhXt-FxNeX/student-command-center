@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Student Command Center",
+  "version": "1.0.0",
+  "identifier": "com.studentcommandcenter.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Student Command Center",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "backgroundColor": "#101114"
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$APPDATA/companion_packs/**"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Education",
+    "publisher": "Student Command Center",
+    "shortDescription": "Your academic life in one place: tasks, planner, study timer, analytics, exams, finances and more.",
+    "longDescription": "Student Command Center is a local-first desktop app for managing your academic life: a task manager and AI-assisted daily planner, a Pomodoro timer with study tracking and analytics, exams, finances, a companion, Spotify, and encrypted backups. Your data stays on your computer.",
+    "resources": {
+      "../assets/companions": "assets/companions"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+# ---- Secrets / local config (NEVER commit) ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+**/secrets/**
+# Real OS keychain DATA files only (e.g. a stray macOS .keychain-db) — NOT
+# source code. This must not match src-tauri/src/ai/keychain.rs, which is
+# the Rust module that TALKS to the OS keychain and contains no secrets
+# itself; a prior broader pattern here (**/*keychain*) accidentally
+# gitignored that legitimate source file.
+**/*.keychain
+**/*.keychain-db
+**/*credentials*
+
+# ---- Node / frontend ----
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Rust / Tauri backend ----
+src-tauri/target/
+src-tauri/Cargo.lock.bak
+**/*.rs.bk
+
+# Tauri build output
+src-tauri/gen/
+src-tauri/WixTools/
+
+# ---- App data (generated at runtime, never source-controlled) ----
+# SQLite database + WAL/SHM files
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+/data/
+/companion-assets-cache/
+
+# Local document uploads / processed text / embeddings cache
+/uploads/
+/processed-documents/
+
+# OS keychain / stronghold vaults (secrets live in the OS keychain, never in-repo)
+*.stronghold
+*.vault
+
+# ---- macOS ----
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# ---- Editors ----
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Test/coverage ----
+coverage/

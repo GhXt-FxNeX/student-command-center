@@ -1,0 +1,15 @@
+pub mod ai;
+pub mod analytics;
+pub mod backup;
+pub mod calendar;
+pub mod companion;
+pub mod courses;
+pub mod data_management;
+pub mod exams;
+pub mod finance;
+pub mod journal;
+pub mod planner;
+pub mod settings;
+pub mod spotify;
+pub mod study;
+pub mod tasks;

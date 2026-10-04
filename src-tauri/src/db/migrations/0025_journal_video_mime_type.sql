@@ -1,0 +1,16 @@
+-- WebKit (the webview Tauri uses on macOS) only reliably records MP4 —
+-- Safari versions before 18.4 don't support WebM in MediaRecorder at all,
+-- and even 18.4+ support varies by codec. The frontend previously
+-- hardcoded "video/webm" for every recording, which produced an
+-- unplayable file on WebKit: MediaRecorder actually encoded something
+-- else (or the negotiated codec didn't match), but the <video> element
+-- was told to decode it as WebM regardless. A browser picks its decoder
+-- from the Blob's `type`, not the file extension, so getting this wrong
+-- makes playback fail even though the bytes on disk are fine.
+--
+-- Fix (frontend): detect the actual supported MIME type via
+-- MediaRecorder.isTypeSupported() before recording, and use whatever
+-- MediaRecorder.mimeType reports after construction (the type it
+-- actually negotiated) for both the in-memory preview Blob and this
+-- stored value — not an assumption.
+ALTER TABLE journal_entries ADD COLUMN video_mime_type TEXT NOT NULL DEFAULT 'video/webm';

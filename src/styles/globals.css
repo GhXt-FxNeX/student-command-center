@@ -1,0 +1,394 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Default (light) theme values. These are overwritten at runtime by
+  src/lib/theme/accent.ts based on the user's saved theme + accent settings,
+  so they only matter as the pre-hydration fallback / recommended defaults.
+*/
+:root {
+  /* Tells the WebView which native chrome to draw (scrollbars, date pickers, focus
+     defaults, text-field carets). macOS draws unobtrusive overlay scrollbars, but WebView2
+     (Windows) and WebKitGTK (Linux) draw classic ones, and without this they stay light
+     — a bright bar down the side of the dark theme. Follows the app's own theme class,
+     which is not always the OS setting. */
+  color-scheme: light;
+  --color-bg: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-border: #e4e4e7;
+  --color-text: #18181b;
+  --color-text-secondary: #71717a;
+
+  --color-accent: #4f7cff;
+  --color-accent-hover: #3f68e0;
+  --color-accent-active: #3355c2;
+  --color-accent-soft: #eaefff;
+  /* Pre-hydration fallbacks for the default blue; lib/theme/accent.ts
+     overwrites all of these at runtime for whatever accent is chosen. */
+  --color-accent-fill: #3367ff;
+  --color-accent-fill-hover: #1450ff;
+  --color-accent-fill-active: #003ef5;
+  --color-accent-text: #1f58ff;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-bg: #101114;
+  --color-surface: #1a1b1f;
+  --color-border: #2a2b30;
+  --color-text: #f4f4f5;
+  --color-text-secondary: #a1a1aa;
+  --color-accent-text: #6189ff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  /* system-ui resolves to San Francisco on macOS, Segoe UI on Windows and the desktop's
+     UI font on Linux; the named fallbacks cover WebViews that don't map system-ui (older
+     WebKitGTK) and the usual Linux sans-serif families, so text never drops to a serif or
+     a bitmap font. The emoji fonts are listed last so the companion's "🎉" toasts render in
+     colour on all three. */
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans",
+    Cantarell, Ubuntu, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+}
+
+/* Visible focus ring everywhere — accessibility requirement, not optional */
+:focus-visible {
+  /* accent-text, not accent: it is guaranteed >= 4.5:1 on every surface, so
+     the ring meets the 3:1 non-text minimum for ALL accents (bright green on
+     white is only 2.3:1). */
+  outline: 2px solid var(--color-accent-text);
+  outline-offset: 2px;
+}
+
+/* Containers that only ever receive focus PROGRAMMATICALLY get no ring. <main> is
+   focused on every route change so screen readers announce the new page, and
+   dialogs are focused when they open; neither is a control, and a ring around a
+   whole region is just noise — on <main> it showed up as a stray accent line under
+   the top bar. Their `outline-none` utility class is not enough on its own: it has
+   the same specificity as the rule above and loses to it, depending on CSS order.
+   The controls INSIDE them keep their ring. */
+main:focus-visible,
+[role="dialog"]:focus-visible {
+  outline: none;
+}
+
+/* Modernization pass: a small, purposeful entrance used when navigating
+   into a Settings category (and its subpages) so the transition feels
+   like a real desktop Preferences panel rather than an instant swap.
+   Respects reduced-motion — see usePrefersReducedMotion.ts for the JS
+   equivalent used by sprite/timer animations that this CSS-only rule
+   can't reach. */
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-in {
+  animation: fade-slide-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-slide-in {
+    animation: none;
+  }
+}
+
+/* Pomodoro ring: a one-shot pulse when the phase actually changes (work ->
+   break, break -> work) — covers both "session transitions" and
+   "completion animations" as the same moment, since in this app a work
+   session completing IS the transition. Deliberately not a continuous/
+   looping animation: a focus timer that never stops pulsing would be the
+   "distracting" outcome the motion-design guidance warns against. */
+@keyframes pomodoro-phase-pulse {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-pomodoro-pulse {
+  animation: pomodoro-phase-pulse 600ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pomodoro-pulse {
+    animation: none;
+  }
+}
+
+/* Companion (Phase 14 §14 modernization): three small, purposeful motions
+   rather than one big one, each covering a specific brief bullet.
+
+   1) A continuous, very small idle float on the floating bubble's sprite —
+      "feel like a persistent application character rather than a static
+      image." Unlike the Pomodoro pulse (a focus tool, where a looping
+      animation would be the distracting outcome the brief warns against),
+      a companion mascot breathing gently at rest is the established,
+      low-distraction pattern for this specific kind of always-on-screen
+      character widget — small amplitude, slow, and off entirely under
+      reduced motion, same as every other animation here. */
+@keyframes companion-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animate-companion-bob {
+  animation: companion-bob 3.6s ease-in-out infinite;
+}
+
+/* 2) "Mood transitions" — a brief pop-fade every time the companion's clip
+   changes (mood shift, stage change), rather than the sprite cutting
+   instantly from one frame to another. Triggered by remounting on
+   `key={clip}` at the call site, not by anything in here. */
+@keyframes companion-mood-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-companion-mood-in {
+  animation: companion-mood-in 220ms ease-out;
+}
+
+/* 3) "Level-up animation" / "evolution animation" / "achievement
+   reactions" — a one-shot expanding, fading ring fired from a real state
+   transition (level increased, or stage changed), same "derive the
+   one-shot trigger from an actual before/after delta, not a sticky flag"
+   approach as the Pomodoro phase pulse. The sprite's own dedicated
+   evolution/level_up clip (moodClip.ts) is the primary celebration; this
+   ring is a complementary layer around the bubble itself. */
+@keyframes companion-celebrate-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+.animate-companion-celebrate-ring {
+  animation: companion-celebrate-ring 900ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-companion-bob,
+  .animate-companion-mood-in,
+  .animate-companion-celebrate-ring {
+    animation: none;
+  }
+}
+
+/* Private Journal (master-prompt §15 modernization). Every keyframe here is
+   a one-shot except `journal-rec-pulse`, which loops ONLY while a recording
+   is actually in progress — an active-session indicator, the same reasoning
+   the Companion's idle bob uses. All of them are disabled under reduced
+   motion (block at the bottom); the recording dot then simply stays solid,
+   which still communicates "recording" without movement. */
+
+/* Full-screen overlay open/close: a short fade + very slight scale, so the
+   journal feels like it surfaces rather than snapping over the app. */
+@keyframes journal-overlay-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes journal-overlay-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+.animate-journal-overlay-in {
+  animation: journal-overlay-in 200ms ease-out;
+}
+.animate-journal-overlay-out {
+  animation: journal-overlay-out 160ms ease-in forwards;
+}
+
+/* Modal backdrop + panel (entry viewer, confirm dialog) and the settings
+   drawer sliding in from the right. */
+@keyframes journal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes journal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes journal-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.animate-journal-fade {
+  animation: journal-fade 160ms ease-out;
+}
+.animate-journal-panel-in {
+  animation: journal-panel-in 200ms ease-out;
+}
+.animate-journal-drawer-in {
+  animation: journal-drawer-in 220ms ease-out;
+}
+
+/* Wrong-password feedback. */
+@keyframes journal-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+.animate-journal-shake {
+  animation: journal-shake 340ms ease-in-out;
+}
+
+/* The lock emblem "popping" as the journal unlocks. */
+@keyframes journal-lock-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-journal-lock-pop {
+  animation: journal-lock-pop 360ms ease-out;
+}
+
+/* The red recording dot. */
+@keyframes journal-rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+.animate-journal-rec-pulse {
+  animation: journal-rec-pulse 1.3s ease-in-out infinite;
+}
+
+/* An entry row collapsing away after a successful delete. */
+@keyframes journal-entry-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+.animate-journal-entry-out {
+  animation: journal-entry-out 180ms ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-journal-overlay-in,
+  .animate-journal-fade,
+  .animate-journal-panel-in,
+  .animate-journal-drawer-in,
+  .animate-journal-shake,
+  .animate-journal-lock-pop,
+  .animate-journal-rec-pulse,
+  .animate-journal-entry-out {
+    animation: none;
+  }
+  /* The overlay's exit animation is what keeps it visible-then-gone; with
+     no animation it must be gone immediately, not stuck at full opacity. */
+  .animate-journal-overlay-out {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Reduced motion, as a safety net rather than per-animation opt-outs: anyone
+   who asks the OS for less motion gets effectively instant transitions and
+   no looping animation ANYWHERE, including animations added later that forget
+   their own `motion-reduce:` variant. (Skeleton pulses and spinners already
+   opt out individually; this catches everything else — hover lifts, the nav
+   panel slide, chart entrances, page fades.) 0.01ms rather than 0 so
+   `animationend`/`transitionend` handlers still fire. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

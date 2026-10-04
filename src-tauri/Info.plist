@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Merged into the app's Info.plist by `tauri build` (Tauri picks up src-tauri/Info.plist
+  automatically). WITHOUT these two keys macOS refuses camera/microphone access to a
+  packaged app — silently, or by terminating it — even though recording works under
+  `tauri dev` (there macOS attributes the request to Terminal, which has its own
+  permission). The wording is deliberately generic: it is shown in the system prompt
+  and readable in the app bundle, and it should not describe features by name.
+-->
+<plist version="1.0">
+<dict>
+  <key>NSCameraUsageDescription</key>
+  <string>Student Command Center needs the camera to record video when you choose to.</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Student Command Center needs the microphone to record audio when you choose to.</string>
+</dict>
+</plist>

@@ -1,0 +1,185 @@
+# Builds the real installers for macOS, Windows and Linux from this one codebase and, when
+# you push a version tag, publishes them on the repository's Releases page — that page is
+# the download link you share:
+#
+#   macOS   -> Student-Command-Center-<version>-macos-universal.dmg   (Apple Silicon + Intel)
+#   Windows -> Student-Command-Center-<version>-windows-x64-setup.exe
+#   Linux   -> Student-Command-Center-<version>-linux-amd64.deb  and  ...-linux-x86_64.AppImage
+#
+# To publish:  git tag v1.0.0 && git push origin v1.0.0   (see RELEASING.md "Publishing")
+# To just test-build without publishing: Actions tab -> build -> Run workflow; the installers
+# are then attached to that run (visible only to people with access to the repository).
+#
+# Each OS has to be built on that OS (Tauri does not cross-compile desktop installers),
+# which is what the matrix does. Nothing here is signed or notarized.
+#
+# The Linux job also does a clean-install smoke test: it installs the .deb on a fresh runner,
+# starts the app under a virtual display with a Secret Service (keyring) running, and checks
+# that it stays alive and creates its database and log in the new data folder. That is a
+# launch test, not a UI test.
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux, os: ubuntu-22.04, targets: "" }
+          - { name: windows, os: windows-latest, targets: "" }
+          - { name: macos, os: macos-latest, targets: "aarch64-apple-darwin,x86_64-apple-darwin" }
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.targets }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Linux system packages
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          # webkit2gtk-4.1 + gtk: the WebView. libdbus: the keyring crate (Secret Service).
+          # patchelf/librsvg: AppImage packaging. gstreamer: bundled into the AppImage so
+          # the Private Journal's video recording/playback works there.
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev \
+            libdbus-1-dev libssl-dev pkg-config patchelf file \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav
+
+      - run: npm ci
+
+      # The step `tauri dev` never runs: strict type-check (unused variables are errors).
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Build installers (Linux, Windows)
+        if: matrix.name != 'macos'
+        run: npm run tauri build
+
+      # One .dmg that runs natively on both Apple Silicon and Intel Macs.
+      - name: Build installer (macOS universal)
+        if: matrix.name == 'macos'
+        run: npm run tauri build -- --target universal-apple-darwin
+
+      - name: Linux clean-install smoke test
+        if: matrix.name == 'linux'
+        run: |
+          set -euo pipefail
+          DEB=$(ls src-tauri/target/release/bundle/deb/*.deb)
+          sudo apt-get install -y ./"$DEB" xvfb dbus-x11 gnome-keyring
+          PKG=$(dpkg-deb -f "$DEB" Package)
+          BIN=$(dpkg -L "$PKG" | grep '^/usr/bin/' | head -n 1)
+          echo "package=$PKG binary=$BIN"
+          export HOME="$(mktemp -d)"            # a brand-new user profile: no data folder yet
+          cat > "$RUNNER_TEMP/smoke.sh" <<'SH'
+          set -eu
+          echo '' | gnome-keyring-daemon --unlock --components=secrets >/dev/null
+          "$BIN" >"$RUNNER_TEMP/app.out" 2>&1 &
+          PID=$!
+          sleep 20
+          kill -0 "$PID" || { echo "app exited early"; cat "$RUNNER_TEMP/app.out"; exit 1; }
+          DATA="$HOME/.local/share/com.studentcommandcenter.app"
+          ls -la "$DATA"
+          test -f "$DATA/student_command_center.sqlite"
+          test -f "$DATA/logs/scc.log"
+          cat "$DATA/logs/scc.log"
+          kill "$PID"
+          SH
+          # Headless GL: WebKitGTK's DMABUF renderer can't initialise under Xvfb on a runner.
+          export WEBKIT_DISABLE_DMABUF_RENDERER=1
+          BIN="$BIN" dbus-run-session -- xvfb-run -a bash "$RUNNER_TEMP/smoke.sh"
+
+      # Copies the installers out of Tauri's bundle folders under clean, space-free names
+      # (the people downloading see these names).
+      - name: Collect installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          B=src-tauri/target/release/bundle
+          mkdir -p installers
+          case "${{ matrix.name }}" in
+            linux)
+              cp "$B"/deb/*.deb "installers/Student-Command-Center-$VERSION-linux-amd64.deb"
+              cp "$B"/appimage/*.AppImage "installers/Student-Command-Center-$VERSION-linux-x86_64.AppImage"
+              ;;
+            windows)
+              cp "$B"/nsis/*-setup.exe "installers/Student-Command-Center-$VERSION-windows-x64-setup.exe"
+              ;;
+            macos)
+              cp src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg \
+                "installers/Student-Command-Center-$VERSION-macos-universal.dmg"
+              ;;
+          esac
+          ls -la installers
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scc-${{ matrix.name }}
+          if-no-files-found: error
+          path: installers/*
+
+  # Only for tag pushes (v*): attach all installers to a public Release page.
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ls -la installers
+          cat > notes.md <<'EOF'
+          ## Download
+
+          | Your computer | Download |
+          |---|---|
+          | **Mac** (Apple Silicon or Intel) | the file ending `macos-universal.dmg` |
+          | **Windows** 10 / 11 | the file ending `windows-x64-setup.exe` |
+          | **Linux** (Ubuntu, Linux Mint, Debian) | the file ending `.deb`, or the `.AppImage` |
+
+          Open the downloaded file and follow the installer. Your data stays on your own computer.
+
+          ### First launch (the apps aren't code-signed yet, so each system asks once)
+
+          - **Mac:** open the .dmg, drag the app to Applications, then **right-click the app → Open → Open**. If it says the app is "damaged", run `xattr -dr com.apple.quarantine "/Applications/Student Command Center.app"` in Terminal.
+          - **Windows:** if "Windows protected your PC" appears, click **More info → Run anyway**.
+          - **Linux:** double-click the `.deb` (or run `sudo apt install ./<file>.deb`). For the AppImage: right-click → Properties → allow executing, then double-click.
+          EOF
+          gh release create "$GITHUB_REF_NAME" installers/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Student Command Center $GITHUB_REF_NAME" \
+            --notes-file notes.md

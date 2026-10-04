@@ -1,0 +1,13 @@
+-- Phase 8c: Ollama/local AI has been permanently removed from this app
+-- (CPU/GPU/heat cost on the user's machine wasn't acceptable — see
+-- README/architecture.md Phase 8c notes). The app is now cloud-AI-only:
+-- Gemini (primary) + OpenRouter (secondary/fallback).
+--
+-- If an existing install had ai_manual_provider = 'local' saved (from
+-- before this change), resolve_manual() in ai/router.rs no longer
+-- recognizes that value at all — leaving it as-is would silently break
+-- every AI feature for that install, and the person might not think to
+-- go change it since nothing in the UI would explain why. Resetting it
+-- to 'gemini' here means the app keeps working after the upgrade; the
+-- person can still pick OpenRouter manually afterward if they prefer.
+UPDATE user_settings SET ai_manual_provider = 'gemini' WHERE ai_manual_provider = 'local';

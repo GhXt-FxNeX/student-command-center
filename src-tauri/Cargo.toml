@@ -1,0 +1,92 @@
+[package]
+name = "student-command-center"
+version = "1.0.0"
+description = "Student Command Center — personal academic & life dashboard"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.1", features = ["protocol-asset"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.31", features = ["bundled", "chrono"] }
+chrono = { version = "0.4", features = ["serde"] }
+r2d2 = "0.8"
+r2d2_sqlite = "0.24"
+thiserror = "1"
+directories = "5"
+# Phase 6 (AI infrastructure): reqwest::blocking keeps provider calls simple
+# synchronous functions (matching every other command in this codebase)
+# instead of pulling in async-trait just for three HTTP-calling methods.
+# keyring is pinned to the stable "3" line deliberately — v4 is still beta
+# (API not finalized) as of this writing; the simple Entry::new/set_password/
+# get_password/delete_credential surface used in keychain.rs is v3's stable,
+# well-established API.
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+# Needed so Tauri commands that call reqwest::blocking or the OS keychain
+# (both genuinely blocking I/O) can hop onto a real OS thread via
+# tokio::task::spawn_blocking. Plain (non-`async`) Tauri commands run on
+# the *main* thread by default in Tauri v2 — only `async fn` commands get
+# moved off it — so blocking calls belong inside spawn_blocking, not in a
+# plain fn. tokio is already pulled in transitively by tauri/reqwest;
+# adding it directly here just lets Cargo's normal dependency unification
+# resolve one shared version rather than us guessing at what Tauri
+# re-exports from its `async_runtime` module.
+tokio = { version = "1", features = ["rt"] }
+# IMPORTANT: keyring v3 has NO default features — without explicitly listing
+# a credential-store backend per platform, Entry::new()/set_password() will
+# silently fall back to keyring's non-persistent in-memory "mock" store on
+# every OS (confirmed against keyring 3.6's own docs), meaning a "saved" API
+# key would vanish on next launch while APPEARING to save successfully. This
+# exact feature list (apple-native + windows-native + sync-secret-service)
+# is keyring's own officially-documented Cargo.toml example for covering
+# macOS + Windows + Linux/BSD (via the D-Bus Secret Service) in one line.
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+# Phase 14 Item 4 (custom companion upload): extracting the user-supplied
+# .zip asset pack. default-features = false + just "deflate" deliberately
+# excludes zip's bzip2/zstd/aes-crypto features (each pulls in more native
+# code to compile) — deflate is what macOS Archive Utility, Windows
+# Explorer, and 7-Zip's default "Zip" format all produce, which covers the
+# realistic case of a solo user zipping their own art folder.
+zip = { version = "2", default-features = false, features = ["deflate"] }
+# Native "choose a file" dialog for picking the custom companion pack .zip —
+# nothing in this codebase needed a file picker before Phase 14 Item 4
+# (the removed Phase 8 document system never shipped one either).
+tauri-plugin-dialog = "2"
+# Phase 14 Item 6 (Spotify): Authorization Code + PKCE is the flow Spotify
+# requires for a distributed desktop app (no client_secret can be safely
+# embedded in a binary users download) — base64/sha2 build the PKCE
+# code_challenge (S256 of a random verifier), rand generates the verifier
+# and the CSRF state value.
+base64 = "0.22"
+sha2 = "0.10"
+rand = "0.8"
+# Phase 14 Item 8 (Secret Private Video Journal): Argon2id both hashes the
+# journal password for verification (a PHC string, safe to store — this is
+# the ONLY thing persisted about the password) and, separately, derives
+# the raw AES key bytes from password + a stored salt each time the
+# journal unlocks. The derived key lives in memory only for the unlocked
+# session (spotify/token_store.rs's keychain pattern doesn't apply here —
+# this key must NEVER touch disk, even encrypted, or the journal's
+# security reduces to "whatever protects the OS keychain," not the
+# person's own password).
+argon2 = "0.5"
+# AES-256-GCM (authenticated encryption) for video files at rest —
+# "encrypt videos at rest" per future_enhancement.md §8.
+aes-gcm = "0.10"
+hex = "0.4"
+# Minimal loopback HTTP listener to catch Spotify's OAuth redirect
+# (http://127.0.0.1:<port>/callback) — deliberately not axum/warp, which
+# would pull in a full async web framework for the sole purpose of
+# accepting one request. tiny_http runs a blocking accept loop on its own
+# thread, which is all a "wait for exactly one redirect" listener needs.
+tiny_http = "0.12"
+# Opens the Spotify authorize page in the user's default browser — the
+# same OAuth loopback pattern every other desktop Spotify integration
+# uses (browser handles login/consent; the app never sees the password).
+tauri-plugin-opener = "2"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

@@ -1,0 +1,53 @@
+{
+  "species": [
+    {
+      "id": "sparkling",
+      "name": "Sparkling",
+      "stages": {
+        "egg":         { "clips": { "idle": { "sheet": "sparkling/_devtest_dragon/sheet.png", "frames": 1, "fps": 1 } } },
+        "baby": {
+          "clips": {
+            "idle":  { "sheet": "sparkling/_devtest_dragon/sheet.png", "frames": 1, "fps": 1 },
+            "happy": { "sheet": "sparkling/baby/happy/sheet.png", "frames": 4, "fps": 6 }
+          }
+        },
+        "in_training": { "clips": { "idle": { "sheet": "sparkling/_devtest_dragon/sheet.png", "frames": 1, "fps": 1 } } },
+        "rookie":      { "clips": { "idle": { "sheet": "sparkling/_devtest_dragon/sheet.png", "frames": 1, "fps": 1 } } },
+        "champion":    { "clips": { "idle": { "sheet": "sparkling/_devtest_dragon/sheet.png", "frames": 1, "fps": 1 } } },
+        "ultimate":    { "clips": { "idle": { "sheet": "sparkling/_devtest_dragon/sheet.png", "frames": 1, "fps": 1 } } },
+        "mega": {
+          "clips": {
+            "idle": { "sheet": "sparkling/_devtest_dragon/sheet.png", "frames": 1, "fps": 1 },
+            "celebration": { "sheet": "sparkling/mega/celebration/sheet.png", "frames": 8, "fps": 12 }
+          }
+        }
+      }
+    },
+    {
+      "id": "emberpup",
+      "name": "Emberpup",
+      "stages": {
+        "egg":         { "clips": { "idle": { "sheet": "emberpup/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "baby":        { "clips": { "idle": { "sheet": "emberpup/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "in_training": { "clips": { "idle": { "sheet": "emberpup/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "rookie":      { "clips": { "idle": { "sheet": "emberpup/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "champion":    { "clips": { "idle": { "sheet": "emberpup/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "ultimate":    { "clips": { "idle": { "sheet": "emberpup/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "mega":        { "clips": { "idle": { "sheet": "emberpup/_shared/sheet.png", "frames": 1, "fps": 1 } } }
+      }
+    },
+    {
+      "id": "tidewhelp",
+      "name": "Tidewhelp",
+      "stages": {
+        "egg":         { "clips": { "idle": { "sheet": "tidewhelp/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "baby":        { "clips": { "idle": { "sheet": "tidewhelp/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "in_training": { "clips": { "idle": { "sheet": "tidewhelp/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "rookie":      { "clips": { "idle": { "sheet": "tidewhelp/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "champion":    { "clips": { "idle": { "sheet": "tidewhelp/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "ultimate":    { "clips": { "idle": { "sheet": "tidewhelp/_shared/sheet.png", "frames": 1, "fps": 1 } } },
+        "mega":        { "clips": { "idle": { "sheet": "tidewhelp/_shared/sheet.png", "frames": 1, "fps": 1 } } }
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+-- Raise the default AI max output tokens from 2048 to 8192.
+--
+-- Root cause (diagnosed after a real "Response wasn't valid JSON: expected
+-- value at line 1 column 1" failure in the AI Planner): Gemini 2.5+/3.x
+-- models — including this app's defaults, gemini-3.7-flash and
+-- gemini-3.1-pro-preview — have "thinking" enabled by default, and
+-- thinking tokens count against maxOutputTokens. A long prompt (like the
+-- AI Planner's, which includes the task list, exam list, locked blocks,
+-- and rules) can exhaust the entire 2048-token budget on internal
+-- reasoning before producing any visible output, returning HTTP 200 with
+-- an empty `text` and finishReason=MAX_TOKENS. The empty string then
+-- reached the JSON parser as-is, producing the cryptic error above. See
+-- ai/providers/gemini.rs for the accompanying fix that detects this case
+-- and surfaces a clear, actionable error instead of an empty string.
+--
+-- This is a plain UPDATE, not an ALTER TABLE — SQLite has no way to change
+-- an existing column's DEFAULT clause short of a full table rebuild, and
+-- since user_settings only ever has the single seeded row, an UPDATE
+-- achieves the same practical effect. It also sidesteps the ALTER TABLE
+-- ADD COLUMN + CHECK/decimal-default bug documented in migration 0009
+-- entirely, since that bug is specific to ADD COLUMN.
+--
+-- Only touches the value if it's still exactly the old shipped default —
+-- never overwrites a value the user has already customized in Settings.
+UPDATE user_settings SET ai_max_output_tokens = 8192 WHERE ai_max_output_tokens = 2048;
