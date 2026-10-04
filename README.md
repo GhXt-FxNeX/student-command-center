@@ -98,7 +98,22 @@ AI usage is designed around the application rather than requiring the entire app
 You can apply usage limits from the app to avoid spending/over-spending
 
 > AI functionality may require configuration of a supported provider and may depend on the provider's availability and usage limits.
-> (for ai to work You need to provide api keys to generate the gemini keys: https://aistudio.google.com/api-keys?project=gen-lang-client-0704022194, for open router keys: https://openrouter.ai/) 
+> (for ai to work You need to provide api keys to generate the gemini keys: https://aistudio.google.com/api-keys?project=gen-lang-client-0704022194, for open router keys: https://openrouter.ai/)
+> ## Where your API keys are stored
+
+Your Gemini and OpenRouter API keys, and your Spotify sign-in, are saved in your computer's built-in secure storage. They are **not** stored in the app's database, in a settings file, or in a backup, and the app's interface never receives them back after you save them. Only the app's background process reads them, when it contacts the provider.
+
+| System | Where | How to see or remove it |
+|---|---|---|
+| **macOS** | Keychain (login keychain) | Open **Keychain Access** and search for `student-command-center` |
+| **Windows** | Credential Manager (Generic credentials) | Open **Credential Manager → Windows Credentials** and look for entries ending in `student-command-center` |
+| **Linux** | The system keyring (GNOME Keyring or KWallet, through the Secret Service) | Open **Passwords and Keys** (Seahorse) or KWalletManager and search for `student-command-center` |
+
+The entries are named `gemini`, `openrouter` and `spotify_tokens`. You can delete a key inside the app, in **Settings → AI**. Disconnecting Spotify removes its tokens the same way.
+
+- **Backups don't include keys.** After restoring a backup or moving to a new computer, enter your API keys again.
+- **Linux needs a keyring running.** Most desktops (Ubuntu, Linux Mint, Fedora) already have one. If saving a key fails, install and start one, for example `sudo apt install gnome-keyring`, then sign out and back in.
+- **The Private Journal password works differently.** It is never stored. Only a one-way hash is kept, and the key that unlocks your videos exists only in memory while the journal is open.
 
 ### Spotify
 
